@@ -1,96 +1,154 @@
-import notificationReducer from "./notificationReducer"
+import courseReducer from "./courseReducer";
 import {
-  FETCH_NOTIFICATIONS_SUCCESS,
-  MARK_AS_READ,
-  SET_TYPE_FILTER,
-} from '../actions/notificationActionTypes';
+  FETCH_COURSE_SUCCESS,
+  SELECT_COURSE,
+  UNSELECT_COURSE,
+} from '../actions/courseActionTypes';
+import coursesNormalizer from '../schema/courses';
 import { Map, fromJS } from 'immutable';
-import notificationsNormalizer from '../schema/notifications';
 
 
-describe("notificationReducer", () => {
+describe("courseReducer", () => {
   let initData = [
-    { id: 1, type: "default", value: "New course available", isRead: false },
-    { id: 2, type: "urgent", value: "New resume available", isRead: false },
-    { id: 3, type: "urgent", html: { __html: 'HTML' }, isRead: false },
+    {
+      id: 1,
+      name: "ES6",
+      credit: 60,
+      isSelected: false,
+    },
+    {
+      id: 2,
+      name: "Webpack",
+      credit: 20,
+      isSelected: false,
+    },
+    {
+      id: 3,
+      name: "React",
+      credit: 40,
+      isSelected: false,
+    },
   ];
 
-  it(`Tests that notificationReducer's default state returns an empty array in 'notifications' attribute`, () => {
+  it(`Tests that courseReducer's default state returns an empty array`, () => {
     // now returns immutable Map
-    expect(notificationReducer(undefined, {})).toEqual(Map({
-      notifications: [],
-      filter: ""
-    }));
-  })
+    expect(courseReducer(undefined, {})).toEqual(Map({}));
+  });
 
-  it(`Tests that 'FETCH_NOTIFICATIONS_SUCCESS' returns correct data`, () => {
-    const action = {
-      type: FETCH_NOTIFICATIONS_SUCCESS,
+  it(`Tests that 'FETCH_COURSE_SUCCESS' returns correct data`, () => {
+    const action = { 
+      type: FETCH_COURSE_SUCCESS,
       data: [
-        { id: 1, type: "default", value: "New course available" },
-        { id: 2, type: "urgent", value: "New resume available" },
-        { id: 3, type: "urgent", html: { __html: 'HTML' } },
-      ]
+        {
+          id: 1,
+          name: "ES6",
+          credit: 60,
+        },
+        {
+          id: 2,
+          name: "Webpack",
+          credit: 20,
+        },
+        {
+          id: 3,
+          name: "React",
+          credit: 40,
+        },
+      ],
     };
 
-    const normalizedData = notificationsNormalizer(action.data);
+    const expected = [
+      {
+        id: 1,
+        name: "ES6",
+        isSelected: false,
+        credit: 60,
+      },
+      {
+        id: 2,
+        name: "Webpack",
+        isSelected: false,
+        credit: 20,
+      },
+      {
+        id: 3,
+        name: "React",
+        isSelected: false,
+        credit: 40,
+      },
+    ];
 
-    Object.keys(normalizedData.notifications).forEach(key => {
-      normalizedData.notifications[key].isRead = false;
-    });
+    const state = courseReducer(undefined, action);
+    expect(state.toJS()).toEqual(coursesNormalizer(expected));
+  });
 
-    normalizedData.filter = "";
-
-    expect(notificationReducer(undefined, action)).toEqual(Map(normalizedData));
-  })
-
-  it(`Tests that 'MARK_AS_READ' returns correct data`, () => {
+  it(`Tests that 'SELECT_COURSE' returns correct data`, () => {
     const action = {
-      type: MARK_AS_READ,
-      notificationId: 1
+      type: SELECT_COURSE,
+      courseId: 1,
     };
 
-    const state = Map({
-      notifications: [
-        { id: 1, type: "default", value: "New course available", isRead: false },
-        { id: 2, type: "urgent", value: "New resume available", isRead: false },
-        { id: 3, type: "urgent", html: { __html: 'HTML' }, isRead: false },
-      ],
-      filter: ""
-    });
+    const expected = [
+      {
+        id: 1,
+        name: "ES6",
+        isSelected: true,
+        credit: 60,
+      },
+      {
+        id: 2,
+        name: "Webpack",
+        isSelected: false,
+        credit: 20,
+      },
+      {
+        id: 3,
+        name: "React",
+        isSelected: false,
+        credit: 40,
+      },
+    ];
 
-    expect(notificationReducer(state, action)).toEqual(Map({
-      notifications: [
-        { id: 1, type: "default", value: "New course available", isRead: true },
-        { id: 2, type: "urgent", value: "New resume available", isRead: false },
-        { id: 3, type: "urgent", html: { __html: 'HTML' }, isRead: false },
-      ],
-      filter: ""
-    }));
-  })
+    const state = courseReducer(
+      fromJS(coursesNormalizer(initData)),
+      action
+    );
 
-  it(`Tests that 'SET_TYPE_FILTER' returns correct data`, () => {
+    expect(state.toJS()).toEqual(coursesNormalizer(expected));
+  });
+
+  it(`Tests that 'UNSELECT_COURSE' returns correct data`, () => {
     const action = {
-      type: SET_TYPE_FILTER,
-      filter: "URGENT"
+      type: UNSELECT_COURSE,
+      courseId: 1,
     };
 
-    const state = Map({
-      notifications: [
-        { id: 1, type: "default", value: "New course available", isRead: false },
-        { id: 2, type: "urgent", value: "New resume available", isRead: false },
-        { id: 3, type: "urgent", html: { __html: 'HTML' }, isRead: false },
-      ],
-      filter: ""
-    });
+    const expected = [
+      {
+        id: 1,
+        name: "ES6",
+        isSelected: false,
+        credit: 60,
+      },
+      {
+        id: 2,
+        name: "Webpack",
+        isSelected: false,
+        credit: 20,
+      },
+      {
+        id: 3,
+        name: "React",
+        isSelected: false,
+        credit: 40,
+      },
+    ];
 
-    expect(notificationReducer(state, action)).toEqual(Map({
-      notifications: [
-        { id: 1, type: "default", value: "New course available", isRead: false },
-        { id: 2, type: "urgent", value: "New resume available", isRead: false },
-        { id: 3, type: "urgent", html: { __html: 'HTML' }, isRead: false },
-      ],
-      filter: "URGENT"
-    }));
-  })
-})
+    const state = courseReducer(
+      fromJS(coursesNormalizer(initData)),
+      action
+    );
+
+    expect(state.toJS()).toEqual(coursesNormalizer(expected));
+  });
+});
